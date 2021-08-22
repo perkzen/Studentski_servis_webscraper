@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 from Job import Job
-from openpyxl import Workbook, load_workbook
+from openpyxl import  load_workbook
 
 data = []
 
@@ -20,33 +20,18 @@ def comparePay(pay, searchParamPay, operator):
         return False
 
 
-# def compareSearchParams(compareTo, searchParam):
-#     if searchParam == "":
-#         return True
-#     return searchParam.lower() in compareTo.strip().lower()
-
-
-def searchTitle(title, searchParamTitle):
-    if searchParamTitle == "":
+def compareSearchParams(compareTo, searchParam):
+    if searchParam == "":
         return True
-    return searchParamTitle.lower() in title.lower()
-
-
-def searchLocation(location, searchParamLocation):
-    if searchParamLocation == "":
-        return True
-    return location.strip().lower() in searchParamLocation.lower()
-
-
-def searchKeywords (keywords, searchKeywords):
-    if searchKeywords == "":
-        return True
-    return
+    return searchParam.strip().lower() in compareTo.strip().lower()
 
 
 def writeToExcel(JobList, fileName):
     wb = load_workbook(fileName)
     ws = wb.active
+    # clear old data
+    ws.delete_rows(1, ws.max_row + 1)
+    # insert new data
     for job in JobList:
         ws.append([job.title, job.payment, job.location, job.description, job.code])
         wb.save(fileName)
@@ -54,7 +39,7 @@ def writeToExcel(JobList, fileName):
 
 # operator (>,<) to sort pay between jobs
 def fetchData(title, location, payment, operator, keywords):
-    searchParams = Job(title=title, location=location, payment=payment, code=0, description="keywords")
+    searchParams = Job(title=title, location=location, payment=payment, code=0, description=keywords)
 
     # need to fetch home page to get number of all pages
     urlHome = requests.get(
@@ -64,7 +49,7 @@ def fetchData(title, location, payment, operator, keywords):
 
     # if there are a lot of pages it might take a while to scrape them all
     pages = soupHome.find_all('a', class_='page-link')[6].text
-    pages = 1
+
     # looping through all pages
     for page in range(int(pages)):
 
@@ -84,17 +69,17 @@ def fetchData(title, location, payment, operator, keywords):
             code = job.find('span', class_='job-code').text
 
             # checking if search parameters match with current job
-            if searchTitle(title, searchParams.title) \
-                    and searchLocation(location, searchParams.location) \
-                     \
+            if compareSearchParams(title, searchParams.title) \
+                    and compareSearchParams(location, searchParams.location) \
+                    and compareSearchParams(description, searchParams.description) \
                     and comparePay(payment, searchParams.payment, operator):
                 data.append(Job(title, payment, description, location, code))
 
 
 if __name__ == '__main__':
     print("Collecting for data...")
-    #   title location description pay operator
-    fetchData("", "mengeš", 5, ">", "")
+    #   title location description pay operator keywords
+    fetchData("", "", 5, ">", "")
     print("Loading Data...")
     writeToExcel(data, 'JobData.xlsx')
     print(f'{len(data)} number of jobs found!')
