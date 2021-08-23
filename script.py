@@ -78,7 +78,7 @@ def fetchData(title, location, payment, operator, keywords):
 
 if __name__ == '__main__':
     print("Collecting for data...")
-    #   title location description pay operator keywords
+    #   title location description pay operator keyword
     fetchData("", "", 5, ">", "")
     print("Loading Data...")
     writeToExcel(data, 'JobData.xlsx')
